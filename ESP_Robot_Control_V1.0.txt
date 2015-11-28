@@ -1,0 +1,195 @@
+// RoboRemo Mobile Apps Has been Used 
+//  Robo Remo Setup as >> Repeat Delay 0
+// Repeat Period 2
+// Syed Razwanul Haque (Nabil)
+// www.facebook.com/Nabilphysics and www.youtube.com/Nabilphysics 
+// Metropolitan University
+// Just For Fun . Do not use it where serious caution required
+
+#include <SoftwareSerial.h>
+
+
+#define RX 3
+#define TX 4
+#define ledPin 13
+#define In1 6 //Motor 1
+#define In2 7 //Motor 1
+#define In3 8 //Motor 2
+#define In4 9 //Motor 2
+#define Enable_1 10 // For Speed Control
+#define Enable_2 11 // For Speed Control
+/*------------------------
+ ESP8266 Connection 
+- 3.3V 3.3V 3.3V  D3 
+- D4   NC    NC   GND
+-
+-  
+-
+- --------|
+-   |--|  |
+- --|  |--|AntInna Side 
+--------------------------
+*/
+char cmd[100];
+int cmdIndex;
+char test[60];
+int t=0;
+SoftwareSerial wifi(RX, TX);
+
+bool internetConnection = false;
+String WifiPass = "AT+CWJAP=\"SDT\",\"dronearmed\""; 
+String incomingByte;
+void setup() {
+  Serial.begin(9600);
+  wifi.begin(9600);
+  delay(1000);
+  pinMode(ledPin, OUTPUT);
+  pinMode(In1, OUTPUT);
+  pinMode(In2, OUTPUT);
+  pinMode(In3, OUTPUT);
+  pinMode(In4, OUTPUT);
+  pinMode(Enable_1,OUTPUT);
+  pinMode(Enable_2,OUTPUT);
+  Stop();
+  
+  wifi.print("AT+CIPSTO=7000\r\n"); // Server Timeout Settings 
+  Investigate(); // You can ignore this function if you dont want to see whats going inside(reply from ESP8266 module)
+  delay(500);
+  wifiInitialization();
+  connectToInternet();
+  digitalWrite(ledPin, HIGH);
+}
+
+void loop() {
+  if(wifi.available() > 0) {
+    //Serial.write(wifi.read());
+    char c = (char)wifi.read();
+    cmd[cmdIndex] = c;            
+    if(cmdIndex<99) cmdIndex++;    // See roboremo website for details
+      if(c=='\n') {   // each command Inds with '\n'
+      exeCmd();
+      cmdIndex = 0;
+  }}
+ else {
+  Stop();
+ } 
+}
+
+void wifiInitialization() {
+ wifi.print("AT+RST\r\n");
+ delay(3000);
+  wifi.print("AT+CWMODE=1\r\n");
+  delay(100);
+   wifi.print("AT+CIPMUX=1\r\n");
+  delay(100);
+  
+ //Investigate();
+
+ // if(test[16]=='O'&& test[17]=='K'){
+ //   Serial.println("CIPMUX = ALL RIGHT");
+ // }
+  wifi.print("AT+CIPSERVER=1,80\r\n");
+  delay(1000);
+ 
+}
+
+void connectToInternet() {
+   wifi.print(WifiPass);
+  wifi.print("\r\n"); // Wifi ID and Password
+  delay(8000);
+  Serial.println("Investigating Password =");
+  Investigate();  
+   if(test[58]=='O'&& test[59]=='K'){
+    Serial.println("Wifi Router Connected");
+    digitalWrite(ledPin, HIGH);
+     internetConnection = true;
+  }
+ else {
+    Serial.println("The WIFI router is not reachable.");
+    digitalWrite(ledPin, LOW);
+    internetConnection = false;
+  }
+  
+  wifi.print("AT+CIFSR\r\n");
+  delay(200);
+  Serial.println("IP=");
+  Investigate();
+  if(test[29]=='O'&& test[30]=='K'){
+    Serial.println("IP Found");
+  }
+  
+}
+void exeCmd() {
+  
+  if(cmd[0]=='F') {  // forward
+    analogWrite(Enable_1, 255);
+    analogWrite(Enable_2, 255);
+    digitalWrite(In1, LOW); 
+    digitalWrite(In2, HIGH); 
+    digitalWrite(In3, LOW); 
+    digitalWrite(In4, HIGH); 
+ 
+    Serial.println("Forward"); 
+    
+    
+  } 
+  
+  else if(cmd[0]=='B') {  // backward
+    analogWrite(Enable_1, 255);
+    analogWrite(Enable_2, 255);
+    digitalWrite(In1, HIGH); 
+    digitalWrite(In2, LOW); 
+    digitalWrite(In3, HIGH); 
+    digitalWrite(In4, LOW);
+    
+    Serial.println("Back"); 
+  } 
+  else if(cmd[0]=='R') { // Right
+    analogWrite(Enable_1, 40);
+    analogWrite(Enable_2, 40);
+    digitalWrite(In1, HIGH); 
+    digitalWrite(In2, LOW); 
+    digitalWrite(In3, LOW); 
+    digitalWrite(In4, HIGH); 
+    Serial.println("Right");
+    }
+  
+  else if(cmd[0]=='L') {  // Left
+    analogWrite(Enable_1, 40);
+    analogWrite(Enable_2, 40);
+    digitalWrite(In1, LOW); 
+    digitalWrite(In2, HIGH); 
+    digitalWrite(In3, HIGH); 
+    digitalWrite(In4, LOW); 
+    Serial.println("Left");
+  } 
+   
+}
+void Stop(){
+    digitalWrite(In1, LOW); 
+    digitalWrite(In2, LOW); 
+    digitalWrite(In3, LOW); 
+    digitalWrite(In4, LOW); 
+    //wifi.print("AT+CIFSR\r\n");
+    delay(10);
+    Serial.println("Stoppppppppppppp");
+    
+    }
+    
+    
+ void ShowWifiStatus(){
+   while(wifi.available()>0){
+     Serial.write(wifi.read());
+   }
+ }
+ void Investigate(){
+    while(wifi.available()>0){ 
+    test[t]=wifi.read();
+    Serial.print(t);
+    Serial.print(">>");
+    Serial.println(test[t]);
+    delay(10);
+    t=t+1;
+  }
+  t=0;
+ }
