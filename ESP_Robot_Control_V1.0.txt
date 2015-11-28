@@ -18,6 +18,16 @@
 #define In4 9 //Motor 2
 #define Enable_1 10 // For Speed Control
 #define Enable_2 11 // For Speed Control
+/*--------------------------------------------
+ * Arduino To ESP8266 Connection
+ -------------------------------------------
+D4----\/\/\/----\/\/\/------- GND 
+    220ohms  | 470ohms
+             |
+        ESP8266 Rx Pin
+D3----\/\/\/----------------- ESP8266 Tx Pin
+      220 ohms Resistor
+ESP8266 Pins >> CH_PD, RST, VCC Connected with Separated 3.3 V Source (Do not use Arduino 3.3V and Do not forget to Common Both Ground)       
 /*------------------------
  ESP8266 Connection 
 - 3.3V 3.3V 3.3V  D3 
